@@ -202,38 +202,42 @@ select {
         {% endif %}
         
         <form method="post">
-            {% csrf_token %}
+    {% csrf_token %}
 
-            {% if form.non_field_errors %}
-                <div class="errorlist">
-                    {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
+    {% if form.non_field_errors %}
+        <div class="errorlist">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-            <div class="form-group">
-                {{ form.psicologo.label_tag }}
-                
-                {{ form.psicologo }} 
-                
-                {% for error in form.psicologo.errors %}
-                    <span class="error-message">{{ error }}</span>
-                {% endfor %}
-            </div>
+    <div class="form-group">
+        {{ form.terapeuta.label_tag }}
+        {{ form.terapeuta }} 
+        {% for error in form.terapeuta.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
 
-            <div class="form-group">
-                {{ form.descricao.label_tag }}
-                
-                {{ form.descricao }}
-                
-                {% for error in form.descricao.errors %}
-                    <span class="error-message">{{ error }}</span>
-                {% endfor %}
-            </div>
-            
-            <button type="submit" class="btn-submit">Enviar Solicitação</button>
-        </form>
+    <div class="form-group">
+        {{ form.data_hora_sugerida.label_tag }}
+        {{ form.data_hora_sugerida }} 
+        {% for error in form.data_hora_sugerida.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.descricao.label_tag }}
+        {{ form.descricao }}
+        {% for error in form.descricao.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
+    
+    <button type="submit" class="btn-submit">Enviar Solicitação</button>
+</form>
 
         <p><a href="{% url 'home' %}">Voltar para Home</a></p>
     </main>
