@@ -208,41 +208,43 @@ select {
             </div>
         {% endif %}
         
-        <form method="post">
-            {% csrf_token %}
+       <form method="post">
+    {% csrf_token %}
 
-            {% if form.non_field_errors %}
-                <div class="errorlist">
-                    {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
+    {% if form.non_field_errors %}
+        <div class="errorlist">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-            <div class="form-group">
-                {{ form.data_hora_agendamento.label_tag }}
-                
-                {{ form.data_hora_agendamento }} 
-                
-                {% for error in form.data_hora_agendamento.errors %}
-                    <span class="error-message">{{ error }}</span>
-                {% endfor %}
-                <small class="form-help">Escolha a data e hora para a consulta (formato local).</small>
-            </div>
+    <div class="form-group">
+        {{ form.status.label_tag }}
+        {{ form.status }}
+        {% for error in form.status.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
 
-            <div class="form-group">
-                {{ form.status.label_tag }}
-                
-                {{ form.status }}
-                
-                {% for error in form.status.errors %}
-                    <span class="error-message">{{ error }}</span>
-                {% endfor %}
-                <small class="form-help">Ao agendar, o status será automaticamente definido como 'Agendada' (ou você pode cancelar).</small>
-            </div>
-            
-            <button type="submit" class="btn-submit">Confirmar Agendamento</button>
-        </form>
+    <div class="form-group">
+        {{ form.data_hora_realizacao.label_tag }}
+        {{ form.data_hora_realizacao }}
+        {% for error in form.data_hora_realizacao.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.observacoes_internas.label_tag }}
+        {{ form.observacoes_internas }}
+        {% for error in form.observacoes_internas.errors %}
+            <span class="error-message">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn-submit">Confirmar Agendamento</button>
+</form>
 
         <p><a href="{% url 'home' %}">Voltar para a Home</a></p>
     </main>

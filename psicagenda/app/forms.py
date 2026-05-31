@@ -2,7 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.forms.widgets import DateTimeInput, PasswordInput
 from django.core.exceptions import ValidationError
-from .models import Usuario, Agendamentos, Consultas, Mensagem, FeedbackAvaliacao
+# IMPORTANTE: Garanta que 'Instituicao' esteja listada aqui nos imports dos seus modelos
+from .models import Usuario, Agendamentos, Consultas, Mensagem, FeedbackAvaliacao, Instituicao
 
 User = get_user_model()
 
@@ -20,6 +21,15 @@ class RegistroForm(forms.Form):
         choices=TIPO_USUARIO_CHOICES, 
         label='Você é um(a)...',
         required=True
+    )
+    
+    # 🟢 NOVO CAMPO ADICIONADO:
+    # Busca todas as instituições para listar no select do formulário.
+    instituicao = forms.ModelChoiceField(
+        queryset=Instituicao.objects.all(),
+        required=False,
+        label='Instituição (Apenas se você for Psicólogo)',
+        empty_label='Selecione uma instituição'
     )
 
     def clean_username(self):
@@ -46,9 +56,11 @@ class RegistroForm(forms.Form):
 class SolicitarConsultaForm(forms.ModelForm):
     class Meta:
         model = Agendamentos
-        fields = ['terapeuta', 'data_hora_sugerida']
+        # Agora o Django vai reconhecer a 'descricao' com sucesso!
+        fields = ['terapeuta', 'data_hora_sugerida', 'descricao']
         widgets = {
             'data_hora_sugerida': DateTimeInput(attrs={'type': 'datetime-local'}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Conte um pouco sobre o motivo da consulta...'}),
         }
 
 

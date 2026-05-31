@@ -28,26 +28,40 @@ def register(request):
         if form.is_valid():
             data = form.cleaned_data
             try:
+                # 1. Cria o usuário base na tabela Usuario
                 user = Usuario.objects.create_user(
                     username=data['username'],
                     email=data.get('email', ''), 
                     password=data['password']
                 )
                 
+                # 2. Verifica se o tipo selecionado foi psicólogo
                 if data['tipo_usuario'] == "psicologo":
                     user.is_psicologo = True
-                    user.save() # Salva o usuário primeiro para gerar o ID
+                    user.save()  # Salva primeiro para gerar o ID do usuário no banco
                     
-                    # 🟢 ADICIONE ESTA LINHA AQUI:
-                    # Cria automaticamente o perfil vinculado na tabela Terapeuta
-                    Terapeuta.objects.create(usuario=user)
+                    # Captura a instituição selecionada no formulário
+                    instituicao_selecionada = data.get('instituicao')
+                    
+                    # Validação de segurança: Psicólogo obrigatoriamente precisa de instituição
+                    if not instituicao_selecionada:
+                        user.delete()  # Desfaz a criação do usuário para não deixar lixo no banco
+                        messages.error(request, "Psicólogos precisam selecionar uma instituição válida.")
+                        return render(request, "register.html", {"form": form})
+                    
+                    # 3. Cria o registro na tabela Terapeuta com a instituição vinculada
+                    Terapeuta.objects.create(
+                        usuario=user, 
+                        instituicao=instituicao_selecionada
+                    ) 
                 else:
                     user.save()
 
                 messages.success(request, "Conta criada com sucesso! Por favor, faça o login.")
                 return redirect("index")
+                
             except Exception as e:
-                print(f"Erro no registro: {e}") # Ajuda a debugar no terminal se falhar
+                print(f"Erro ao registrar: {e}") 
                 messages.error(request, "Ocorreu um erro ao criar a conta. Tente novamente.")
     else:
         form = RegistroForm()
@@ -58,7 +72,6 @@ def logout_view(request):
     messages.info(request, "Você foi desconectado(a).")
     return redirect("index")
 
-# Para isto (Bem mais seguro e correto):
 @login_required
 def home(request):
     if request.user.is_psicologo:
@@ -83,8 +96,6 @@ def home(request):
         }
     return render(request, "home.html", context)
 
-# views.py
-
 @login_required
 def solicitar_consulta(request):
     if request.user.is_psicologo:
@@ -101,7 +112,6 @@ def solicitar_consulta(request):
             messages.success(request, "Solicitação enviada com sucesso!")
             return redirect("home")
         else:
-            # 🔴 ADICIONE ESSA LINHA AQUI ABAIXO:
             print("ERROS DO FORMULÁRIO:", form.errors)
             
     else:
@@ -110,21 +120,38 @@ def solicitar_consulta(request):
 
 @login_required
 def agendar_consulta(request, consulta_id):
-    # Procura o agendamento pendente para transformá-lo em uma sessão oficial
+    # Procura o agendamento pendente
     agendamento = get_object_or_404(Agendamentos, id=consulta_id, status='pendente')
+    
     if request.method == "POST":
         form = AgendarConsultaForm(request.POST)
         if form.is_valid():
+            # 1. Salva a consulta oficial
             consulta = form.save(commit=False)
             consulta.agendamento = agendamento
             consulta.save()
             
+            # 2. Atualiza o status do agendamento original para confirmado
             agendamento.status = "confirmado"
             agendamento.save()
-            messages.success(request, "Consulta agendada com sucesso!")
+            
+            # 3. 🟢 CORREÇÃO DO ERRO DE INTEGRIDADE:
+            # Passamos os dados obrigatórios usando os dados contidos no agendamento original
+            Chats.objects.get_or_create(
+                id=consulta.id,
+                defaults={
+                    'paciente': agendamento.paciente,
+                    'terapeuta': agendamento.terapeuta
+                }
+            )
+
+            messages.success(request, "Consulta agendada e sala de chat criada com sucesso!")
             return redirect("home")
+        else:
+            print("ERROS DO AGENDAMENTO:", form.errors)
     else:
         form = AgendarConsultaForm()
+        
     return render(request, "agendar_consulta.html", {"form": form})
 
 @login_required

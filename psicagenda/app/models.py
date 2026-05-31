@@ -88,6 +88,7 @@ class Agendamentos(models.Model):
     data_hora_sugerida = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_AGENDAMENTO, default="pendente")
     criado_em = models.DateTimeField(default=timezone.now)
+    descricao = models.TextField(blank=True, null=True, verbose_name="Descrição do Motivo")
 
     def __str__(self):
         return f"Agendamento {self.id} - {self.paciente.username} com {self.terapeuta.usuario.username}"

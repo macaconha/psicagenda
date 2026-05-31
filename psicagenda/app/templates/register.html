@@ -161,6 +161,15 @@ main a:hover {
     color: var(--color-success);
     border: 1px solid var(--color-success);
 }
+
+/* Estilização para o select de instituição */
+select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%234682B4' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 8px 10px;
+    padding-right: 30px;
+}
     </style>
 </head>
 <body>
@@ -227,11 +236,45 @@ main a:hover {
                     <span class="error-message">{{ error }}</span>
                 {% endfor %}
             </div>
+
+            <div class="form-group" id="grupo-instituicao">
+                {{ form.instituicao.label_tag }}
+                {{ form.instituicao }}
+                {% for error in form.instituicao.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
             
             <button type="submit" class="btn-register">Registrar</button>
         </form>
 
         <p>Já tem conta? <a href="{% url 'index' %}">Login</a></p>
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Captura os elementos necessários mapeando as tags geradas pelo Django
+            const tipoUsuarioSelect = document.querySelector("select[name='tipo_usuario']");
+            const grupoInstituicao = document.getElementById("grupo-instituicao");
+
+            function verificarTipoUsuario() {
+                // Se for psicólogo, exibe o campo. Se for paciente, esconde.
+                if (tipoUsuarioSelect.value === "psicologo") {
+                    grupoInstituicao.style.display = "block";
+                } else {
+                    grupoInstituicao.style.display = "none";
+                    // Limpa a seleção caso mude de psicólogo de volta para paciente
+                    const instituicaoSelect = grupoInstituicao.querySelector("select");
+                    if (instituicaoSelect) instituicaoSelect.value = "";
+                }
+            }
+
+            // Escuta as mudanças de opção feitas pelo usuário
+            tipoUsuarioSelect.addEventListener("change", verificarTipoUsuario);
+            
+            // Executa uma vez no carregamento caso o formulário retorne com erros de validação
+            verificarTipoUsuario();
+        });
+    </script>
 </body>
 </html>
