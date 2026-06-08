@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Matrículas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Gerenciamento de Matrículas Escolares</h2>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Voltar para Home</a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Aluno</th>
+                            <th>Instituição</th>
+                            <th>Código da Matrícula</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mat in matriculas %}
+                        <tr>
+                            <td><strong>{{ mat.aluno.username }}</strong></td>
+                            <td>{{ mat.instituicao.nome }}</td>
+                            <td><code>{{ mat.codigo_matricula }}</code></td>
+                            <td>
+                                {% if mat.ativo %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'alternar_status_matricula' mat.id %}" 
+                                   class="btn btn-sm {% if mat.ativo %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                    {% if mat.ativo %}Desativar{% else %}Ativar{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">Nenhuma matrícula cadastrada no sistema.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -8,168 +8,167 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
-:root {
-    --color-primary: #4682B4;
-    --color-secondary: #B2F4C5;
-    --color-background: #F8F8F8;
-    --color-text: #333333;
-    --color-error: #E74C3C;
-    --color-success: #2ECC71;
-}
+        :root {
+            --color-primary: #4682B4;
+            --color-secondary: #B2F4C5;
+            --color-background: #F8F8F8;
+            --color-text: #333333;
+            --color-error: #E74C3C;
+            --color-success: #2ECC71;
+        }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-body {
-    font-family: 'Open Sans', sans-serif;
-    background-color: var(--color-background);
-    color: var(--color-text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-}
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-header {
-    width: 100%;
-    text-align: center;
-    position: absolute;
-    top: 0;
-    padding: 20px 0;
-}
+        header {
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            padding: 20px 0;
+        }
 
-header h1 {
-    color: var(--color-primary);
-    font-size: 2.5em;
-    font-weight: 700;
-}
+        header h1 {
+            color: var(--color-primary);
+            font-size: 2.5em;
+            font-weight: 700;
+        }
 
-main {
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 450px;
-    margin-top: 80px;
-    text-align: center;
-}
+        main {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            margin-top: 80px;
+            text-align: center;
+        }
 
-.form-group {
-    margin-bottom: 18px;
-    text-align: left;
-}
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
 
-label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #555;
-}
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #555;
+        }
 
-input:not([type="checkbox"]),
-select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    appearance: none;
-    -webkit-appearance: none;
-    background-color: white;
-}
+        input:not([type="checkbox"]),
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: white;
+        }
 
-input:focus,
-select:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(70, 130, 180, 0.2);
-    outline: none;
-}
+        input:focus,
+        select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(70, 130, 180, 0.2);
+            outline: none;
+        }
 
-.btn-register {
-    width: 100%;
-    background-color: var(--color-primary);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-    margin-top: 15px;
-}
+        .btn-register {
+            width: 100%;
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 15px;
+        }
 
-.btn-register:hover {
-    background-color: #366795;
-}
+        .btn-register:hover {
+            background-color: #366795;
+        }
 
-main p {
-    margin-top: 20px;
-}
+        main p {
+            margin-top: 20px;
+        }
 
-main a {
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.3s;
-}
+        main a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
 
-main a:hover {
-    color: #366795;
-    text-decoration: underline;
-}
+        main a:hover {
+            color: #366795;
+            text-decoration: underline;
+        }
 
-.messages {
-    margin-bottom: 20px;
-    text-align: center;
-}
+        .messages {
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-.message {
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    font-size: 0.95em;
-    font-weight: 600;
-}
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
 
-.message.error,
-.error-message,
-.errorlist p {
-    background-color: rgba(231, 76, 60, 0.15);
-    color: var(--color-error);
-    border: 1px solid var(--color-error);
-    padding: 5px 10px;
-    border-radius: 4px;
-    margin-top: 5px;
-    font-weight: 400;
-    display: block;
-}
+        .message.error,
+        .error-message,
+        .errorlist p {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--color-error);
+            border: 1px solid var(--color-error);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-weight: 400;
+            display: block;
+        }
 
-.errorlist {
-    margin-bottom: 15px;
-    text-align: left;
-}
+        .errorlist {
+            margin-bottom: 15px;
+            text-align: left;
+        }
 
-.message.success {
-    background-color: rgba(46, 204, 113, 0.15);
-    color: var(--color-success);
-    border: 1px solid var(--color-success);
-}
+        .message.success {
+            background-color: rgba(46, 204, 113, 0.15);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
 
-/* Estilização para o select de instituição */
-select {
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%234682B4' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px top 50%;
-    background-size: 8px 10px;
-    padding-right: 30px;
-}
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%234682B4' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 8px 10px;
+            padding-right: 30px;
+        }
     </style>
 </head>
 <body>
@@ -244,35 +243,41 @@ select {
                     <span class="error-message">{{ error }}</span>
                 {% endfor %}
             </div>
+
+            <div class="form-group" id="grupo-matricula">
+                {{ form.codigo_matricula.label_tag }}
+                {{ form.codigo_matricula }}
+                {% for error in form.codigo_matricula.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
             
             <button type="submit" class="btn-register">Registrar</button>
         </form>
 
-        <p>Já tem conta? <a href="{% url 'index' %}">Login</a></p>
+        <p>Já tem conta? <a href="{% url 'login' %}">Login</a></p>
     </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Captura os elementos necessários mapeando as tags geradas pelo Django
             const tipoUsuarioSelect = document.querySelector("select[name='tipo_usuario']");
-            const grupoInstituicao = document.getElementById("grupo-instituicao");
+            const grupoMatricula = document.getElementById("grupo-matricula");
 
             function verificarTipoUsuario() {
-                // Se for psicólogo, exibe o campo. Se for paciente, esconde.
-                if (tipoUsuarioSelect.value === "psicologo") {
-                    grupoInstituicao.style.display = "block";
+                // Se for 'paciente' (Aluno), o campo de matrícula aparece. Se for psicólogo, some.
+                if (tipoUsuarioSelect.value === "paciente") {
+                    grupoMatricula.style.display = "block";
                 } else {
-                    grupoInstituicao.style.display = "none";
-                    // Limpa a seleção caso mude de psicólogo de volta para paciente
-                    const instituicaoSelect = grupoInstituicao.querySelector("select");
-                    if (instituicaoSelect) instituicaoSelect.value = "";
+                    grupoMatricula.style.display = "none";
+                    const matriculaInput = grupoMatricula.querySelector("input");
+                    if (matriculaInput) matriculaInput.value = "";
                 }
             }
 
             // Escuta as mudanças de opção feitas pelo usuário
             tipoUsuarioSelect.addEventListener("change", verificarTipoUsuario);
             
-            // Executa uma vez no carregamento caso o formulário retorne com erros de validação
+            // Executa no carregamento inicial da página
             verificarTipoUsuario();
         });
     </script>
