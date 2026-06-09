@@ -6,7 +6,7 @@ from django.utils import timezone
 # REF01 & REF13: GERENCIAR USUÁRIO / SISTEMA DE LOGIN
 # ==============================================================================
 class Usuario(AbstractUser):
-    # Diferencia Pacientes, Psicólogos/Terapeutas e Administradores da Instituição
+    # Diferencia Alunos (Pacientes), Psicólogos/Terapeutas e Administradores da Instituição
     is_psicologo = models.BooleanField(default=False)
     is_admin_instituicao = models.BooleanField(default=False)
     telefone = models.CharField(max_length=20, blank=True)
@@ -14,7 +14,7 @@ class Usuario(AbstractUser):
     foto_perfil = models.ImageField(upload_to="usuarios/", blank=True, null=True)
 
     def __str__(self):
-        return f"{self.username} ({'Psicólogo' if self.is_psicologo else 'Paciente'})"
+        return f"{self.username} ({'Psicólogo' if self.is_psicologo else 'Aluno (Paciente)'})"
 
 
 # ==============================================================================
@@ -44,16 +44,31 @@ class Terapeuta(models.Model):
 
 
 # ==============================================================================
-# REF02: GERENCIAR MATRÍCULA
+# REF02: GERENCIAR MATRÍCULA (VINCULADA AO ALUNO/PACIENTE DA ESCOLA)
 # ==============================================================================
 class Matricula(models.Model):
-    terapeuta = models.OneToOneField(Terapeuta, on_delete=models.CASCADE, related_name="matricula")
+    # Vincula a matrícula diretamente ao Aluno (Paciente)
+    aluno = models.OneToOneField(
+        Usuario, 
+        on_delete=models.CASCADE, 
+        related_name="matricula",
+        limit_choices_to={'is_psicologo': False, 'is_admin_instituicao': False}
+    )
+    # Vincula o Aluno à sua respectiva Escola/Instituição
+    instituicao = models.ForeignKey(
+        Instituicao, 
+        on_delete=models.CASCADE, 
+        related_name="matriculas_alunos", 
+        null=True, 
+        blank=True
+    )
     codigo_matricula = models.CharField(max_length=50, unique=True)
     data_inicio = models.DateField(default=timezone.now)
     ativo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Matrícula {self.codigo_matricula} - {self.terapeuta.usuario.username}"
+        esc = self.instituicao.nome if self.instituicao else "Sem Escola"
+        return f"Matrícula {self.codigo_matricula} - Aluno: {self.aluno.username} ({esc})"
 
 
 # ==============================================================================
@@ -108,6 +123,9 @@ class Consultas(models.Model):
     data_hora_realizacao = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CONSULTA, default="agendada")
     observacoes_internas = models.TextField(blank=True, null=True) # Visível apenas para o terapeuta
+    
+    # Parecer clínico salvo apenas para o próprio psicólogo e a instituição
+    relatorio_clinico = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Consulta {self.id} (Ref. Agendamento {self.agendamento.id}) - Status: {self.status}"
@@ -130,7 +148,6 @@ class Formularios(models.Model):
 # REF09 & REF10: GERENCIAR CHATS / MENSAGEM
 # ==============================================================================
 class Chats(models.Model):
-    # Vincula o chat a uma consulta ou diretamente entre a dupla terapeuta-paciente
     paciente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="chats_paciente", limit_choices_to={'is_psicologo': False})
     terapeuta = models.ForeignKey(Terapeuta, on_delete=models.CASCADE, related_name="chats_terapeuta")
     criado_em = models.DateTimeField(default=timezone.now)
@@ -153,7 +170,7 @@ class Mensagem(models.Model):
 # ==============================================================================
 class FeedbackAvaliacao(models.Model):
     consulta = models.OneToOneField(Consultas, on_delete=models.CASCADE, related_name="feedback")
-    nota_atendimento = models.PositiveSmallIntegerField(help_text="Nota de 1 a 5 para a sessão")
+    nota_atendimento = models.PositiveSmallIntegerField(help_text="Nota de 1 a 5 para a sessão", default=5)
     comentario_paciente = models.TextField(blank=True, null=True)
     enviado_em = models.DateTimeField(default=timezone.now)
 

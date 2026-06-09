@@ -1,171 +1,304 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
+from django.contrib.auth import login, logout, authenticate  
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from .models import Usuario, Agendamentos, Consultas, Chats, Mensagem, Terapeuta
-from .forms import RegistroForm, SolicitarConsultaForm, AgendarConsultaForm, MensagemForm 
 
+# Importe os seus modelos e formulários necessários
+from .models import Usuario, Terapeuta, Matricula, Agendamentos, Mensagem, Chats, Consultas, FeedbackAvaliacao
+from .forms import RegistroForm, SolicitarConsultaForm, AgendarConsultaForm
+
+# ==============================================================================
+# PÁGINA INICIAL / DIRECIONAMENTO
+# ==============================================================================
 def index(request):
     if request.user.is_authenticated:
-        return redirect("home")
-    
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password) 
-        if user:
+        return redirect('home')
+    return redirect('register')
+
+
+# ==============================================================================
+# SISTEMA DE LOGIN 
+# ==============================================================================
+def login_view(request):
+    """
+    Gerencia o acesso de usuários já cadastrados.
+    """
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    erro = None
+    if request.method == 'POST':
+        usuario_input = request.POST.get('username')
+        senha_input = request.POST.get('password')
+        
+        user = authenticate(request, username=usuario_input, password=senha_input)
+        
+        if user is not None:
             login(request, user)
-            return redirect("home")
+            return redirect('home')
         else:
-            messages.error(request, "Usuário ou senha inválidos.")
-            
-    return render(request, "index.html")
+            erro = "Usuário ou senha inválidos."
 
-def register(request):
-    if request.method == "POST":
-        form = RegistroForm(request.POST) 
-        if form.is_valid():
-            data = form.cleaned_data
-            try:
-                # 1. Cria o usuário base na tabela Usuario
-                user = Usuario.objects.create_user(
-                    username=data['username'],
-                    email=data.get('email', ''), 
-                    password=data['password']
-                )
-                
-                # 2. Verifica se o tipo selecionado foi psicólogo
-                if data['tipo_usuario'] == "psicologo":
-                    user.is_psicologo = True
-                    user.save()  # Salva primeiro para gerar o ID do usuário no banco
-                    
-                    # Captura a instituição selecionada no formulário
-                    instituicao_selecionada = data.get('instituicao')
-                    
-                    # Validação de segurança: Psicólogo obrigatoriamente precisa de instituição
-                    if not instituicao_selecionada:
-                        user.delete()  # Desfaz a criação do usuário para não deixar lixo no banco
-                        messages.error(request, "Psicólogos precisam selecionar uma instituição válida.")
-                        return render(request, "register.html", {"form": form})
-                    
-                    # 3. Cria o registro na tabela Terapeuta com a instituição vinculada
-                    Terapeuta.objects.create(
-                        usuario=user, 
-                        instituicao=instituicao_selecionada
-                    ) 
-                else:
-                    user.save()
+    return render(request, 'index.html', {'erro': erro})
 
-                messages.success(request, "Conta criada com sucesso! Por favor, faça o login.")
-                return redirect("index")
-                
-            except Exception as e:
-                print(f"Erro ao registrar: {e}") 
-                messages.error(request, "Ocorreu um erro ao criar a conta. Tente novamente.")
-    else:
-        form = RegistroForm()
-    return render(request, "register.html", {"form": form})
 
+# ==============================================================================
+# SISTEMA DE LOGOUT 
+# ==============================================================================
 def logout_view(request):
     logout(request)
-    messages.info(request, "Você foi desconectado(a).")
-    return redirect("index")
+    return redirect('register')
 
+
+# ==============================================================================
+# DASHBOARD PRINCIPAL / HOME
+# ==============================================================================
 @login_required
 def home(request):
+    contexto = {}
+    
     if request.user.is_psicologo:
-        # Busca o perfil de terapeuta associado ao usuário logado
-        terapeuta_perfil = getattr(request.user, 'perfil_terapeuta', None)
+        terapeuta = get_object_or_404(Terapeuta, usuario=request.user)
         
-        if terapeuta_perfil:
-            consultas_pendentes = Agendamentos.objects.filter(terapeuta=terapeuta_perfil, status="pendente")
-            consultas_agendadas = Consultas.objects.filter(agendamento__terapeuta=terapeuta_perfil)
-        else:
-            consultas_pendentes = Agendamentos.objects.none()
-            consultas_agendadas = Consultas.objects.none()
+        contexto['consultas_pendentes'] = Agendamentos.objects.filter(
+            terapeuta=terapeuta, 
+            status='pendente'
+        ).order_by('-criado_em')
         
-        context = {
-            "consultas_pendentes": consultas_pendentes,
-            "consultas_agendadas": consultas_agendadas,
-        }
+        contexto['consultas_agendadas'] = Agendamentos.objects.filter(
+            terapeuta=terapeuta, 
+            status='agendada'
+        ).order_by('data_hora_sugerida')
+        
     else:
-        consultas = Agendamentos.objects.filter(paciente=request.user).order_by('-criado_em')
-        context = {
-            "consultas": consultas,
-        }
-    return render(request, "home.html", context)
-
-@login_required
-def solicitar_consulta(request):
-    if request.user.is_psicologo:
-        messages.error(request, "Psicólogos não podem solicitar consultas.")
-        return redirect("home")
+        contexto['consultas'] = Agendamentos.objects.filter(
+            paciente=request.user
+        ).order_by('-criado_em')
         
-    if request.method == "POST":
-        form = SolicitarConsultaForm(request.POST) 
-        if form.is_valid():
-            agendamento = form.save(commit=False)
-            agendamento.paciente = request.user 
-            agendamento.status = "pendente"
-            agendamento.save()
-            messages.success(request, "Solicitação enviada com sucesso!")
-            return redirect("home")
-        else:
-            print("ERROS DO FORMULÁRIO:", form.errors)
-            
-    else:
-        form = SolicitarConsultaForm()
-    return render(request, "solicitar_consulta.html", {"form": form})
+        try:
+            contexto['matricula'] = request.user.matricula
+        except ObjectDoesNotExist:
+            contexto['matricula'] = None
 
+    return render(request, 'home.html', contexto)
+
+
+# ==============================================================================
+# EFETUAR O AGENDAMENTO DA CONSULTA
+# ==============================================================================
 @login_required
 def agendar_consulta(request, consulta_id):
-    # Procura o agendamento pendente
-    agendamento = get_object_or_404(Agendamentos, id=consulta_id, status='pendente')
-    
-    if request.method == "POST":
+    if not request.user.is_psicologo:
+        return redirect('home')
+        
+    # Busca o agendamento pendente que o aluno fez
+    agendamento = get_object_or_404(Agendamentos, id=consulta_id)
+
+    if request.method == 'POST':
         form = AgendarConsultaForm(request.POST)
         if form.is_valid():
-            # 1. Salva a consulta oficial
-            consulta = form.save(commit=False)
-            consulta.agendamento = agendamento
-            consulta.save()
+            consulta_final = form.save(commit=False)
             
-            # 2. Atualiza o status do agendamento original para confirmado
-            agendamento.status = "confirmado"
+            # Vincula o agendamento à consulta
+            consulta_final.agendamento = agendamento
+            consulta_final.save()
+            
+            # Atualiza o status do agendamento original para 'agendada'
+            agendamento.status = 'agendada'
             agendamento.save()
             
-            # 3. 🟢 CORREÇÃO DO ERRO DE INTEGRIDADE:
-            # Passamos os dados obrigatórios usando os dados contidos no agendamento original
-            Chats.objects.get_or_create(
-                id=consulta.id,
-                defaults={
-                    'paciente': agendamento.paciente,
-                    'terapeuta': agendamento.terapeuta
-                }
-            )
-
-            messages.success(request, "Consulta agendada e sala de chat criada com sucesso!")
-            return redirect("home")
-        else:
-            print("ERROS DO AGENDAMENTO:", form.errors)
+            return redirect('home')
     else:
         form = AgendarConsultaForm()
-        
-    return render(request, "agendar_consulta.html", {"form": form})
 
+    return render(request, 'agendar_consulta.html', {
+        'form': form,
+        'agendamento': agendamento
+    })
+
+
+# ==============================================================================
+# SALA DE CHAT DA CONSULTA + FEEDBACK & RELATÓRIO PÓS-SESSÃO
+# ==============================================================================
 @login_required
 def chat_consulta(request, consulta_id):
-    chat = get_object_or_404(Chats, id=consulta_id)
-    mensagens = chat.mensagens.all().order_by("criado_em")
-    if request.method == "POST":
-        form = MensagemForm(request.POST)
+    # 1. Busca o agendamento atual para saber quem é o paciente e o terapeuta
+    agendamento = get_object_or_404(Agendamentos, id=consulta_id)
+    
+    # Bloqueia o acesso se o usuário logado não fizer parte dessa consulta
+    if request.user != agendamento.paciente and request.user != agendamento.terapeuta.usuario:
+        return redirect('home')
+        
+    # 2. Busca ou Cria a sala de chat baseando-se no par Paciente + Terapeuta
+    chat_objeto, criado = Chats.objects.get_or_create(
+        paciente=agendamento.paciente,
+        terapeuta=agendamento.terapeuta
+    )
+
+    # 3. Localiza a instância de Consulta real associada
+    consulta_real = getattr(agendamento, 'consulta_vinculada', None)
+
+    # 4. Verifica se o horário agendado da consulta já ficou no passado
+    consulta_encerrada = agendamento.data_hora_sugerida < timezone.now()
+        
+    if request.method == 'POST':
+        # Caso A: Envio normal de nova mensagem no Chat
+        if 'mensagem_texto' in request.POST:
+            texto = request.POST.get('mensagem_texto')
+            if texto:
+                Mensagem.objects.create(
+                    chat=chat_objeto,
+                    remetente=request.user,
+                    conteudo=texto
+                )
+            return redirect('chat_consulta', consulta_id=agendamento.id)
+
+        # Caso B: Paciente enviando o Feedback (Apenas após o horário final)
+        elif 'feedback_texto' in request.POST and consulta_encerrada and request.user == agendamento.paciente:
+            if consulta_real:
+                FeedbackAvaliacao.objects.update_or_create(
+                    consulta=consulta_real,
+                    defaults={
+                        'nota_atendimento': request.POST.get('feedback_nota', 5),
+                        'comentario_paciente': request.POST.get('feedback_texto')
+                    }
+                )
+            return redirect('chat_consulta', consulta_id=agendamento.id)
+
+        # Caso C: Psicólogo registrando Relatório Clínico Privado
+        elif 'relatorio_texto' in request.POST and consulta_encerrada and request.user.is_psicologo:
+            if consulta_real:
+                consulta_real.relatorio_clinico = request.POST.get('relatorio_texto')
+                consulta_real.status = "realizada"
+                consulta_real.save()
+            return redirect('chat_consulta', consulta_id=agendamento.id)
+
+    # Busca o histórico de mensagens desse chat específico
+    mensagens_historico = Mensagem.objects.filter(chat=chat_objeto).order_by('criado_em')
+        
+    contexto = {
+        'consulta': agendamento,
+        'consulta_real': consulta_real,
+        'mensagens': mensagens_historico,
+        'consulta_encerrada': consulta_encerrada,
+    }
+    
+    return render(request, 'chat_consulta.html', contexto)
+
+
+# ==============================================================================
+# VIEW DE REGISTRO (VINCULADA AO SEU REGISTROFORM)
+# ==============================================================================
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
         if form.is_valid():
-            mensagem = form.save(commit=False)
-            mensagem.chat = chat
-            mensagem.remetente = request.user
-            mensagem.save()
-            return redirect("chat_consulta", consulta_id=chat.id) 
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            tipo_usuario = form.cleaned_data['tipo_usuario']
+            instituicao = form.cleaned_data['instituicao']
+            
+            user = Usuario.objects.create_user(
+                username=username, 
+                email=email, 
+                password=password
+            )
+            
+            if tipo_usuario == 'psicologo':
+                user.is_psicologo = True
+                user.save()
+                
+                Terapeuta.objects.create(
+                    usuario=user,
+                    instituicao=instituicao,
+                    crp="Pendente"
+                )
+            else:  # Caso seja 'paciente' (Aluno)
+                user.is_psicologo = False
+                user.save()
+                
+                codigo_mat = form.cleaned_data['codigo_matricula']
+                Matricula.objects.create(
+                    aluno=user,
+                    instituicao=instituicao,
+                    codigo_matricula=codigo_mat,
+                    ativo=True
+                )
+            
+            login(request, user)
+            return redirect('home')
     else:
-        form = MensagemForm()
-    return render(request, "chat_consulta.html", {"consulta": chat, "mensagens": mensagens, "form": form})
+        form = RegistroForm()
+        
+    return render(request, 'register.html', {'form': form})
+
+
+# ==============================================================================
+# VIEW DE SOLICITAR CONSULTA 
+# ==============================================================================
+@login_required
+def solicitar_consulta_view(request):
+    if request.user.is_psicologo:
+        return redirect('home')
+
+    # Busca a matrícula do aluno para descobrir a instituição dele
+    try:
+        matricula_aluno = request.user.matricula
+        if not matricula_aluno.ativo:
+            return render(request, 'erro_matricula.html', {
+                'mensagem': "Sua matrícula escolar está inativa. Procure a secretaria da escola."
+            })
+        instituicao_aluno = matricula_aluno.instituicao
+    except ObjectDoesNotExist:
+        return render(request, 'erro_matricula.html', {
+            'mensagem': "Sua matrícula escolar não foi localizada. Procure a secretaria da escola."
+        })
+
+    if request.method == 'POST':
+       if request.method == 'POST':
+        # 🟢 REMOVIDO O 'Sample=None' DAQUI:
+        form = SolicitarConsultaForm(request.POST, instituicao_aluno=instituicao_aluno)
+        if form.is_valid():
+            agendamento = form.save(commit=False)
+            agendamento.paciente = request.user
+            agendamento.status = 'pendente'
+            agendamento.save()
+            return redirect('home')
+    else:
+        form = SolicitarConsultaForm(instituicao_aluno=instituicao_aluno)
+
+    return render(request, 'solicitar_consulta.html', {'form': form})
+
+solicitar_consulta = solicitar_consulta_view
+
+
+# ==============================================================================
+# LISTA DE MATRÍCULAS 
+# ==============================================================================
+@login_required
+def lista_matriculas(request):
+    if not request.user.is_psicologo:
+        return redirect('home')
+
+    matriculas = Matricula.objects.all().order_by('aluno__username')
+    return render(request, 'lista_matriculas.html', {'matriculas': matriculas})
+
+
+# ==============================================================================
+# ALTERNAR STATUS DA MATRÍCULA
+# ==============================================================================
+@login_required
+def alternar_status_matricula(request, matricula_id):
+    if not request.user.is_psicologo:
+        return redirect('home')
+        
+    matricula = get_object_or_404(Matricula, id=matricula_id)
+    matricula.ativo = not matricula.ativo
+    matricula.save()
+    
+    return redirect('lista_matriculas')
